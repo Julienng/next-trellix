@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { ClerkProvider, UserButton } from "@clerk/nextjs";
+import clsx from "clsx";
+import Link from "next/link";
+import { Github, Youtube } from "lucide-react";
+import { ReactNode, cloneElement } from "react";
+import { clerkTheme } from "./clerkTheme";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,8 +21,86 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body
+          className={clsx(
+            inter.className,
+            "h-screen bg-slate-100 text-slate-900"
+          )}
+        >
+          <div className="h-full flex flex-col min-h-0">
+            <div className="bg-slate-900 border-b border-slate-800 flex items-center justify-between py-4 px-8 box-border">
+              <Link href="/home" className="block leading-3 w-1/3">
+                <div className="font-black text-2xl text-white">Trellix</div>
+                <div className="text-slate-500">a Remix Demo</div>
+              </Link>
+              <div className="flex items-center gap-6">
+                <IconLink
+                  href="https://www.youtube.com/watch?v=RTHzZVbTl6c&list=PLXoynULbYuED9b2k5LS44v9TQjfXifwNu&pp=gAQBiAQB"
+                  icon={<Youtube />}
+                  label="Videos"
+                />
+                <IconLink
+                  href="https://github.com/remix-run/example-trellix"
+                  label="Source"
+                  icon={<Github />}
+                />
+                {/* <IconLink
+                  href="https://remix.run/docs/en/main"
+                  icon={<Nextjs>}
+                  label="Docs"
+                /> */}
+              </div>
+              <div className="w-1/3 flex justify-end">
+                <UserButton appearance={clerkTheme} />
+                {/* {userId ? (
+                  <form method="post" action="/logout">
+                    <button className="block text-center">
+                      <LogoutIcon />
+                      <br />
+                      <span className="text-slate-500 text-xs uppercase font-bold">
+                        Log out
+                      </span>
+                    </button>
+                  </form>
+                ) : (
+                  <Link href="/login" className="block text-center">
+                    <LoginIcon />
+                    <br />
+                    <span className="text-slate-500 text-xs uppercase font-bold">
+                      Log in
+                    </span>
+                  </Link>
+                )} */}
+              </div>
+            </div>
+
+            <div className="flex-grow min-h-0 h-full">{children}</div>
+          </div>
+        </body>
+      </html>
+    </ClerkProvider>
+  );
+}
+
+function IconLink({
+  icon,
+  href,
+  label,
+}: {
+  icon: ReactNode;
+  href: string;
+  label: string;
+}) {
+  return (
+    <a
+      href={href}
+      className="text-slate-500 text-xs uppercase font-bold text-center"
+    >
+      {cloneElement(icon as any, { className: "inline-block h-8" })}
+      {/* <img src={icon} aria-hidden className="inline-block h-8" /> */}
+      <span className="block mt-2">{label}</span>
+    </a>
   );
 }
