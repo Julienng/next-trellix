@@ -12,6 +12,7 @@ import {
   upsertItem,
 } from "./queries";
 import { parseItemMutation } from "./utils";
+import { revalidatePath } from "next/cache";
 
 export async function boardDetailAction(boardId: number, formData: FormData) {
   let { userId } = auth();
@@ -19,7 +20,7 @@ export async function boardDetailAction(boardId: number, formData: FormData) {
 
   const accountId = userId;
 
-  invariant(boardId, "Missing boardId");
+  invariant(boardId && !Number.isNaN(boardId), "Missing boardId");
 
   let intent = formData.get("intent");
 
@@ -60,6 +61,7 @@ export async function boardDetailAction(boardId: number, formData: FormData) {
       throw new Error(`Unknown intent: ${intent}`);
     }
   }
+  revalidatePath(`/board/${boardId}`);
 
   return { ok: true };
 }

@@ -4,6 +4,9 @@ import { Metadata } from "next";
 import { getBoardData } from "./queries";
 import { notFound, redirect } from "next/navigation";
 import invariant from "tiny-invariant";
+import { Board } from "./board";
+import { BoardActionProvider } from "./board-form-context";
+import { boardDetailAction } from "./action";
 
 export async function generateMetadata({
   params,
@@ -16,7 +19,7 @@ export async function generateMetadata({
   };
 }
 
-async function loader(id: string | undefined | null) {
+export async function loader(id: string | undefined | null) {
   const user = await currentUser();
   if (!user) return undefined;
 
@@ -35,5 +38,12 @@ export default async function BoardPage({
 }) {
   const board = await loader(params.id);
 
-  return <div></div>;
+  if (!board) notFound();
+
+  const action = boardDetailAction.bind(null, board.id);
+  return (
+    <BoardActionProvider action={action}>
+      <Board board={board} />
+    </BoardActionProvider>
+  );
 }
