@@ -1,4 +1,5 @@
 import { prisma } from "@/db";
+import { cache } from "react";
 
 export async function deleteBoard(boardId: number, accountId: string) {
   return prisma.board.delete({
@@ -16,10 +17,10 @@ export async function createBoard(userId: string, name: string, color: string) {
   });
 }
 
-export async function getHomeData(userId: string) {
+export const getHomeData = cache(async function getHomeData(userId: string) {
   return prisma.board.findMany({
     where: {
       accountId: userId,
     },
   });
-}
+});
