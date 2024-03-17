@@ -1,7 +1,7 @@
 import { currentUser } from "@clerk/nextjs";
 import { Metadata } from "next";
 
-import { getBoardData } from "./queries";
+import { getBoardData, loader } from "./queries";
 import { notFound, redirect } from "next/navigation";
 import invariant from "tiny-invariant";
 import { Board } from "./board";
@@ -17,18 +17,6 @@ export async function generateMetadata({
   return {
     title: `${board ? board.name : "Board"}`,
   };
-}
-
-export async function loader(id: string | undefined | null) {
-  const user = await currentUser();
-  if (!user) return undefined;
-
-  invariant(id, "Missing board ID");
-
-  const board = await getBoardData(Number(id), user.id);
-  if (!board) throw notFound();
-
-  return board;
 }
 
 export default async function BoardPage({

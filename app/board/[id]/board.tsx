@@ -2,7 +2,7 @@
 import { useOptimistic, useRef } from "react";
 import invariant from "tiny-invariant";
 
-import { type loader } from "./page";
+import type { loader } from "./queries";
 import { INTENTS, RenderedColumn, type RenderedItem } from "./types";
 import { Column } from "./column";
 import { NewColumn } from "./new-column";

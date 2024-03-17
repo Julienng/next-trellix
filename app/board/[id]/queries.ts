@@ -2,6 +2,21 @@ import { prisma } from "@/db";
 
 import { ItemMutation } from "./types";
 import { cache } from "react";
+import { currentUser } from "@clerk/nextjs";
+import invariant from "tiny-invariant";
+import { notFound } from "next/navigation";
+
+export async function loader(id: string | undefined | null) {
+  const user = await currentUser();
+  if (!user) return undefined;
+
+  invariant(id, "Missing board ID");
+
+  const board = await getBoardData(Number(id), user.id);
+  if (!board) throw notFound();
+
+  return board;
+}
 
 export function deleteCard(id: string, accountId: string) {
   return prisma.item.delete({ where: { id, Board: { accountId } } });
