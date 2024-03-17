@@ -1,9 +1,9 @@
 import invariant from "tiny-invariant";
-import { useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 
-import { ItemMutation, INTENTS, CONTENT_TYPES } from "./types";
-import { boardDetailAction } from "./action";
-import { Trash } from "lucide-react";
+import { INTENTS, CONTENT_TYPES } from "./types";
+
+import { Loader, Trash } from "lucide-react";
 import { useBoardAction } from "./board-form-context";
 
 interface CardProps {
@@ -14,6 +14,7 @@ interface CardProps {
   order: number;
   nextOrder: number;
   previousOrder: number;
+  pending?: boolean;
 }
 
 export function Card({
@@ -24,6 +25,7 @@ export function Card({
   order,
   nextOrder,
   previousOrder,
+  pending,
 }: CardProps) {
   const onBoardAction = useBoardAction();
   const [isPending, startTransition] = useTransition();
@@ -102,7 +104,10 @@ export function Card({
           );
         }}
       >
-        <h3>{title}</h3>
+        <h3 className="flex gap-2">
+          <span>{title}</span>{" "}
+          {pending ? <Loader className="animate-spin" /> : null}
+        </h3>
         <div className="mt-2">{content || <>&nbsp;</>}</div>
         <form
           action={(formData) => {

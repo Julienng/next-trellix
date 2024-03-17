@@ -3,21 +3,49 @@ import { useOptimistic, useRef } from "react";
 import invariant from "tiny-invariant";
 
 import { type loader } from "./page";
-import { INTENTS, type RenderedItem } from "./types";
+import { INTENTS, RenderedColumn, type RenderedItem } from "./types";
 import { Column } from "./column";
 import { NewColumn } from "./new-column";
 import { EditableText } from "./components";
+import { BoardActionProvider } from "./board-form-context";
 
 export function Board({
   board,
+  actionBoard,
 }: {
   board: NonNullable<Awaited<ReturnType<typeof loader>>>;
+  actionBoard: (formData: FormData) => void;
 }) {
   let itemsById = new Map(board.items.map((item) => [item.id, item]));
 
-  const [boardItems, setBoardItems] = useOptimistic(board.items);
-  const [boardColumns, setBoardColumns] = useOptimistic(board.columns);
+  const [boardItems, addBoardItem] = useOptimistic(
+    board.items,
+    (state, optimisticState: any) => {
+      return [...state, { ...optimisticState, pending: true }];
+    }
+  );
+  const [boardColumns, addBoardColumn] = useOptimistic(
+    board.columns,
+    (state, optimisticState: any) => {
+      return [...state, { ...optimisticState, pending: true }];
+    }
+  );
 
+  async function action(formData: FormData) {
+    let intent = formData.get("intent");
+
+    if (intent === INTENTS.createItem || intent === INTENTS.moveItem) {
+      const item = getPendingItem(formData);
+      addBoardItem(item);
+    }
+
+    if (intent === INTENTS.createColumn) {
+      const column = getPendingColumn(formData);
+      addBoardColumn(column);
+    }
+    // TODO: optimistic state update
+    actionBoard(formData);
+  }
   // TODO: optimistic state update
   // let pendingItems = usePendingItems();
 
@@ -59,47 +87,54 @@ export function Board({
   }
 
   return (
-    <div
-      className="h-full min-h-0 flex flex-col overflow-x-scroll"
-      ref={scrollContainerRef}
-      style={{ backgroundColor: board.color }}
-    >
-      <h1>
-        <EditableText
-          value={board.name}
-          fieldName="name"
-          inputClassName="mx-8 my-4 text-2xl font-medium border border-slate-400 rounded-lg py-1 px-2 text-black"
-          buttonClassName="mx-8 my-4 text-2xl font-medium block rounded-lg text-left border border-transparent py-1 px-2 text-slate-800"
-          buttonLabel={`Edit board "${board.name}" name`}
-          inputLabel="Edit board name"
-        >
-          <input type="hidden" name="intent" value={INTENTS.updateBoardName} />
-          <input type="hidden" name="id" value={board.id} />
-        </EditableText>
-      </h1>
-
-      <div className="flex flex-grow min-h-0 h-full items-start gap-4 px-8 pb-4">
-        {[...columns.values()].map((col) => {
-          return (
-            <Column
-              key={col.id}
-              name={col.name}
-              columnId={col.id}
-              items={col.items}
+    <BoardActionProvider action={action}>
+      <div
+        className="h-full min-h-0 flex flex-col overflow-x-scroll"
+        ref={scrollContainerRef}
+        style={{ backgroundColor: board.color }}
+      >
+        <h1>
+          <EditableText
+            value={board.name}
+            fieldName="name"
+            inputClassName="mx-8 my-4 text-2xl font-medium border border-slate-400 rounded-lg py-1 px-2 text-black"
+            buttonClassName="mx-8 my-4 text-2xl font-medium block rounded-lg text-left border border-transparent py-1 px-2 text-slate-800"
+            buttonLabel={`Edit board "${board.name}" name`}
+            inputLabel="Edit board name"
+          >
+            <input
+              type="hidden"
+              name="intent"
+              value={INTENTS.updateBoardName}
             />
-          );
-        })}
+            <input type="hidden" name="id" value={board.id} />
+          </EditableText>
+        </h1>
 
-        <NewColumn
-          boardId={board.id}
-          onAdd={scrollRight}
-          editInitially={board.columns.length === 0}
-        />
+        <div className="flex flex-grow min-h-0 h-full items-start gap-4 px-8 pb-4">
+          {[...columns.values()].map((col) => {
+            return (
+              <Column
+                key={col.id}
+                name={col.name}
+                columnId={col.id}
+                items={col.items}
+                pending={(col as any).pending}
+              />
+            );
+          })}
 
-        {/* trolling you to add some extra margin to the right of the container with a whole dang div */}
-        <div data-lol className="w-8 h-1 flex-shrink-0" />
+          <NewColumn
+            boardId={board.id}
+            onAdd={scrollRight}
+            editInitially={board.columns.length === 0}
+          />
+
+          {/* trolling you to add some extra margin to the right of the container with a whole dang div */}
+          <div data-lol className="w-8 h-1 flex-shrink-0" />
+        </div>
       </div>
-    </div>
+    </BoardActionProvider>
   );
 }
 
@@ -120,6 +155,27 @@ export function Board({
 //       return { name, id };
 //     });
 // }
+
+function getPendingColumn(formData: FormData) {
+  let name = String(formData.get("name"));
+  let id = String(formData.get("id"));
+  return { name, id } as RenderedColumn;
+}
+
+function getPendingItem(formData: FormData) {
+  let columnId = String(formData.get("columnId"));
+  let title = String(formData.get("title"));
+  let id = String(formData.get("id"));
+  let order = Number(formData.get("order"));
+
+  return {
+    title,
+    id,
+    order,
+    columnId,
+    content: null,
+  } as RenderedItem;
+}
 
 // // These are the inflight items that are being created or moved, instead of
 // // managing state ourselves, we just ask Remix for the state

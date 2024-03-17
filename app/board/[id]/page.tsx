@@ -41,9 +41,5 @@ export default async function BoardPage({
   if (!board) notFound();
 
   const action = boardDetailAction.bind(null, board.id);
-  return (
-    <BoardActionProvider action={action}>
-      <Board board={board} />
-    </BoardActionProvider>
-  );
+  return <Board board={board} actionBoard={action} />;
 }

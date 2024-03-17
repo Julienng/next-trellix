@@ -1,3 +1,9 @@
+export interface RenderedColumn {
+  id: string;
+  name: string;
+  order: number;
+  boardId: number;
+}
 export interface RenderedItem {
   id: string;
   title: string;

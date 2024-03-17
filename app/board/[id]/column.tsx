@@ -2,26 +2,22 @@
 import { useState, useRef } from "react";
 import invariant from "tiny-invariant";
 
-import {
-  ItemMutation,
-  INTENTS,
-  CONTENT_TYPES,
-  type RenderedItem,
-} from "./types";
+import { INTENTS, CONTENT_TYPES, type RenderedItem } from "./types";
 import { NewCard } from "./new-card";
 import { flushSync } from "react-dom";
 import { Card } from "./card";
 import { EditableText } from "./components";
-import { Plus } from "lucide-react";
+import { Loader, Plus } from "lucide-react";
 import { useBoardAction } from "./board-form-context";
 
 interface ColumnProps {
   name: string;
   columnId: string;
   items: RenderedItem[];
+  pending?: boolean;
 }
 
-export function Column({ name, columnId, items }: ColumnProps) {
+export function Column({ name, columnId, items, pending }: ColumnProps) {
   const onBoardAction = useBoardAction();
 
   let [acceptDrop, setAcceptDrop] = useState(false);
@@ -86,7 +82,7 @@ export function Column({ name, columnId, items }: ColumnProps) {
         setAcceptDrop(false);
       }}
     >
-      <div className="p-2">
+      <div className="flex gap-2 p-2">
         <EditableText
           fieldName="name"
           value={name}
@@ -98,6 +94,7 @@ export function Column({ name, columnId, items }: ColumnProps) {
           <input type="hidden" name="intent" value={INTENTS.updateColumn} />
           <input type="hidden" name="columnId" value={columnId} />
         </EditableText>
+        {pending ? <Loader className="animate-spin" /> : null}
       </div>
 
       <ul ref={listRef} className="flex-grow overflow-auto">
@@ -115,6 +112,7 @@ export function Column({ name, columnId, items }: ColumnProps) {
               nextOrder={
                 items[index + 1] ? items[index + 1].order : item.order + 1
               }
+              pending={(item as any).pending}
             />
           ))}
       </ul>
